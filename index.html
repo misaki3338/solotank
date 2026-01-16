@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ステージクリア型シューティングゲーム</title>
+    <title>シューティングゲーム</title>
     <style>
         body {
             margin: 0;
@@ -205,7 +205,7 @@
         </div>
         
         <div class="control-info">
-            WASD:移動 | G:射撃 | スペース:続ける
+            WASD:移動 | G:射撃
         </div>
     </div>
     
@@ -281,12 +281,12 @@
         function handleKeyDown(e) {
             game.keys[e.keyCode] = true;
             
-    // デバッグ用：スタート画面で Shift + 数字
-    if (
+// デバッグ用：スタート画面で Shift + 数字
+if (
     !game.running &&
     document.getElementById('game-message').style.display === 'block' &&
     e.shiftKey
-    ) {
+) {
     // Shift + 1〜9
     if (e.keyCode >= 49 && e.keyCode <= 57) {
         const targetStage = e.keyCode - 48;
@@ -294,9 +294,9 @@
         if (targetStage >= 1 && targetStage <= CONFIG.maxStage) {
             game.stage = targetStage;
             console.log(`Debug: Stage set to ${game.stage}`);
-            }
         }
     }
+            }
             
             if (e.keyCode === KEYS.SPACE && !game.running) {
                 e.preventDefault();
@@ -326,6 +326,32 @@
             game.lastTime = performance.now();
             requestAnimationFrame(gameLoop);
         }
+	
+	function placePlayerSafely() {
+    const padding = 10; // 壁から最低離す距離
+    let attempts = 0;
+    let safe = false;
+
+    while (!safe && attempts < 100) {
+        // 画面下寄りにランダム配置
+        game.player.x = game.width * 0.3 + Math.random() * game.width * 0.4;
+        game.player.y = game.height * 0.65 + Math.random() * game.height * 0.25;
+
+        safe = !checkWallCollision({
+            x: game.player.x,
+            y: game.player.y,
+            radius: game.player.size / 2 + padding
+        });
+
+        attempts++;
+    }
+
+    // 最悪見つからなかった場合は中央下に退避
+    if (!safe) {
+        game.player.x = game.width / 2;
+        game.player.y = game.height * 0.8;
+    }
+}
         
         function resetStage() {
             // プレイヤー初期化（初回のみ）
@@ -361,10 +387,13 @@
             createPlayerSupportBots();
             
             // 壁生成
-            game.walls = [];
-            for (let i = 0; i < CONFIG.wallCount; i++) {
-                createRandomWall();
-            }
+game.walls = [];
+for (let i = 0; i < CONFIG.wallCount; i++) {
+    createRandomWall();
+}
+
+// プレイヤーを安全な位置に配置
+placePlayerSafely();
             
             // 敵生成（ステージごとの敵数）
             game.enemies = [];
@@ -1192,22 +1221,28 @@
         }
         
         function showUpgradeMenu() {
-            // 偶数ステージは2つ、奇数ステージは1つ
-            const upgradeCount = (game.stage - 1) % 2 === 0 ? 2 : 1;
-            const upgradeOptions = getRandomUpgrades(upgradeCount);
-            const container = document.getElementById('upgrade-options');
-            container.innerHTML = '';
-            
-            upgradeOptions.forEach(upgrade => {
-                const div = document.createElement('div');
-                div.className = 'upgrade-option';
-                div.innerHTML = `<h3>${upgrade.name}</h3><p>${upgrade.description}</p>`;
-                div.onclick = () => selectUpgrade(upgrade.id, upgradeCount);
-                container.appendChild(div);
-            });
-            
-            document.getElementById('upgrade-menu').style.display = 'block';
-        }
+    // 表示は常に3つ
+    const displayCount = 3;
+
+    // 奇数ステージクリア：2つ / 偶数ステージクリア：1つ
+    totalUpgradesToSelect = (game.stage % 2 === 0) ? 2 : 1;
+
+    upgradesSelected = 0;
+
+    const upgradeOptions = getRandomUpgrades(displayCount);
+    const container = document.getElementById('upgrade-options');
+    container.innerHTML = '';
+
+    upgradeOptions.forEach(upgrade => {
+        const div = document.createElement('div');
+        div.className = 'upgrade-option';
+        div.innerHTML = `<h3>${upgrade.name}</h3><p>${upgrade.description}</p>`;
+        div.onclick = () => selectUpgrade(upgrade.id);
+        container.appendChild(div);
+    });
+
+    document.getElementById('upgrade-menu').style.display = 'block';
+}
         
         function getRandomUpgrades(count) {
             const allUpgrades = [
@@ -1285,24 +1320,25 @@
         let upgradesSelected = 0;
         let totalUpgradesToSelect = 1;
         
-        function selectUpgrade(upgradeId, totalCount) {
-            if (upgradeId === 'permanentSpread' || upgradeId === 'permanentHoming' || upgradeId === 'lifeSteal') {
-                game.upgrades[upgradeId] = true;
-            } else {
-                game.upgrades[upgradeId]++;
-            }
-            
-            upgradesSelected++;
-            
-            if (upgradesSelected >= totalCount) {
-                upgradesSelected = 0;
-                document.getElementById('upgrade-menu').style.display = 'none';
-                startStage();
-            } else {
-                // 次のアップグレードを表示
-                showUpgradeMenu();
-            }
-        }
+        function selectUpgrade(upgradeId) {
+    if (upgradeId === 'permanentSpread' || upgradeId === 'permanentHoming' || upgradeId === 'lifeSteal') {
+        game.upgrades[upgradeId] = true;
+    } else {
+        game.upgrades[upgradeId]++;
+    }
+
+    upgradesSelected++;
+
+    // まだ選べる場合は続ける
+    if (upgradesSelected < totalUpgradesToSelect) {
+        return;
+    }
+
+    // 選択完了
+    upgradesSelected = 0;
+    document.getElementById('upgrade-menu').style.display = 'none';
+    startStage();
+}
         
         function render() {
             game.ctx.clearRect(0, 0, game.width, game.height);
