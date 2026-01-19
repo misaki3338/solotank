@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ステージクリア型シューティングゲーム</title>
+    <title>シューティングゲーム（全6ステージ）</title>
     <style>
         body {
             margin: 0;
@@ -205,7 +205,7 @@
         </div>
         
         <div class="control-info">
-            WASD:移動 | G:射撃 | スペース:続ける
+            WASD:移動 | G:射撃
         </div>
     </div>
     
@@ -600,7 +600,7 @@ placePlayerSafely();
                 
                 // 最終ステージクリア
                 if (game.stage >= CONFIG.maxStage) {
-                    showMessage('ゲームクリア！', '全ステージ制覇おめでとう！', '最初から');
+                    showMessage('ゲームクリア！', 'はまだに報告しよう', '最初から');
                     game.stage = 1;
                     game.player = null;
                     game.upgrades = {
