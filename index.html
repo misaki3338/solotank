@@ -493,7 +493,7 @@ placePlayerSafely();
                     const dx = x - game.player.x;
                     const dy = y - game.player.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 150) {
+                    if (dist < 100) {
                         validPosition = false;
                     }
                 }
@@ -504,7 +504,7 @@ placePlayerSafely();
                         const dx = x - other.x;
                         const dy = y - other.y;
                         const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 60) {
+                        if (dist < 40) {
                             validPosition = false;
                             break;
                         }
@@ -676,8 +676,8 @@ placePlayerSafely();
             
             if (game.keys[KEYS.G] && p.shootCooldown <= 0 && p.ammo > 0) {
                 shoot(p, true);
-                const cooldownReduction = game.upgrades.fireRate * 50;
-                p.shootCooldown = Math.max(CONFIG.bulletCooldown - cooldownReduction, 200);
+                const cooldownReduction = game.upgrades.fireRate * 100;
+                p.shootCooldown = Math.max(CONFIG.bulletCooldown - cooldownReduction, 50);
             }
             
             checkItemCollision(p);
@@ -951,7 +951,7 @@ placePlayerSafely();
                                 // ライフスティール
                                 if (game.upgrades.lifeSteal && bullet.isPlayer) {
                                     game.player.health = Math.min(
-                                        game.player.health + Math.floor(bullet.damage * 0.5),
+                                        game.player.health + Math.floor(bullet.damage * 0.3),
                                         game.player.maxHealth
                                     );
                                 }
@@ -1249,12 +1249,12 @@ placePlayerSafely();
                 {
                     id: 'maxHealth',
                     name: '最大体力アップ',
-                    description: '最大体力が20増加します（現在: +' + (game.upgrades.maxHealth * 20) + '）'
+                    description: '最大体力が増加します（現在: +' + (game.upgrades.maxHealth * 40) + '）'
                 },
                 {
                     id: 'damage',
                     name: 'ダメージアップ',
-                    description: '弾丸のダメージが5増加します（現在: ' + (10 + game.upgrades.damage * 5) + '）'
+                    description: '弾丸のダメージが増加します（現在: ' + (10 + game.upgrades.damage * 8) + '）'
                 },
                 {
                     id: 'fireRate',
@@ -1264,7 +1264,7 @@ placePlayerSafely();
                 {
                     id: 'bulletSpeed',
                     name: '弾速アップ',
-                    description: '弾丸の速度が30%増加します（現在: +' + (game.upgrades.bulletSpeed * 30) + '%）'
+                    description: '弾丸の速度が増加します（現在: +' + (game.upgrades.bulletSpeed * 40) + '%）'
                 },
                 {
                     id: 'moveSpeed',
@@ -1308,7 +1308,7 @@ placePlayerSafely();
                 allUpgrades.push({
                     id: 'lifeSteal',
                     name: 'ライフスティール',
-                    description: '与ダメージの50%を体力として回復します'
+                    description: '与ダメージの30%を体力として回復します'
                 });
             }
             
