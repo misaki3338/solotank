@@ -200,7 +200,7 @@
         
         <div class="upgrade-menu" id="upgrade-menu">
             <h2>ステージクリア！</h2>
-            <p style="margin-bottom: 20px;">アップグレードを1つ選択してください</p>
+            <p style="margin-bottom: 20px;">アップグレードを選択してください</p>
             <div class="upgrade-options" id="upgrade-options"></div>
         </div>
         
@@ -232,6 +232,7 @@
             height: 600,
             running: false,
             lastTime: 0,
+            deltaTime: 0,
             keys: {},
             player: null,
             enemies: [],
@@ -570,10 +571,11 @@ placePlayerSafely();
         function gameLoop(timestamp) {
             if (!game.running) return;
             
-            const deltaTime = timestamp - game.lastTime;
+            const deltaMs = timestamp - game.lastTime;
             game.lastTime = timestamp;
+            game.deltaTime = Math.min(deltaMs / 1000, 0.1); // 秒単位、最大0.1秒
             
-            update(deltaTime);
+            update(deltaMs);
             render();
             
             if (game.running) {
@@ -600,7 +602,7 @@ placePlayerSafely();
                 
                 // 最終ステージクリア
                 if (game.stage >= CONFIG.maxStage) {
-                    showMessage('ゲームクリア！', 'はまだに報告しよう', '最初から');
+                    showMessage('ゲームクリア！', 'みさきに報告しよう', '最初から');
                     game.stage = 1;
                     game.player = null;
                     game.upgrades = {
@@ -622,7 +624,7 @@ placePlayerSafely();
             updateBullets(deltaTime);
             updateEffects(deltaTime);
             
-            if (Math.random() < CONFIG.itemSpawnRate && game.items.length < 3) {
+            if (Math.random() < CONFIG.itemSpawnRate * game.deltaTime * 60 && game.items.length < 3) { // 60fps基準に正規化
                 spawnRandomItem();
             }
             
@@ -654,8 +656,8 @@ placePlayerSafely();
             if (dx !== 0 || dy !== 0) {
                 p.angle = Math.atan2(dy, dx);
                 const length = Math.sqrt(dx * dx + dy * dy);
-                dx = dx / length * currentSpeed;
-                dy = dy / length * currentSpeed;
+                dx = dx / length * currentSpeed * game.deltaTime * 60; // 60fps基準に正規化
+                dy = dy / length * currentSpeed * game.deltaTime * 60;
                 
                 const newX = p.x + dx;
                 const newY = p.y + dy;
@@ -794,8 +796,8 @@ placePlayerSafely();
                 // 正規化して速度を適用
                 const length = Math.sqrt(dx * dx + dy * dy);
                 if (length > 0) {
-                    dx = (dx / length) * enemy.speed;
-                    dy = (dy / length) * enemy.speed;
+                    dx = (dx / length) * enemy.speed * game.deltaTime * 60; // 60fps基準に正規化
+                    dy = (dy / length) * enemy.speed * game.deltaTime * 60;
                 }
                 
                 // 移動（壁判定あり）
@@ -899,11 +901,11 @@ placePlayerSafely();
                     let angleDiff = targetAngle - bullet.angle;
                     while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                     while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    bullet.angle += angleDiff * 0.05;
+                    bullet.angle += angleDiff * 0.05 * game.deltaTime * 60; // 60fps基準に正規化
                 }
                 
-                bullet.x += Math.cos(bullet.angle) * bullet.speed;
-                bullet.y += Math.sin(bullet.angle) * bullet.speed;
+                bullet.x += Math.cos(bullet.angle) * bullet.speed * game.deltaTime * 60; // 60fps基準に正規化
+                bullet.y += Math.sin(bullet.angle) * bullet.speed * game.deltaTime * 60;
                 
                 if (bullet.x < 0 || bullet.x > game.width || 
                     bullet.y < 0 || bullet.y > game.height) {
@@ -1111,7 +1113,7 @@ placePlayerSafely();
         function updateSupportBots(deltaTime) {
             // プレイヤーの護衛機
             for (const bot of game.supportBots) {
-                bot.angle += 0.02;
+                bot.angle += 0.02 * game.deltaTime * 60; // 60fps基準に正規化
                 bot.shootCooldown -= deltaTime;
                 
                 const x = game.player.x + Math.cos(bot.angle) * bot.orbitRadius;
@@ -1145,7 +1147,7 @@ placePlayerSafely();
             
             for (let i = enemy.supportBots.length - 1; i >= 0; i--) {
                 const bot = enemy.supportBots[i];
-                bot.angle += 0.03;
+                bot.angle += 0.03 * game.deltaTime * 60; // 60fps基準に正規化
                 bot.shootCooldown -= deltaTime;
                 
                 bot.x = enemy.x + Math.cos(bot.angle) * bot.orbitRadius;
@@ -1464,7 +1466,7 @@ placePlayerSafely();
         
         function drawItems() {
             for (const item of game.items) {
-                item.angle += 0.05;
+                item.angle += 0.05 * game.deltaTime * 60; // 60fps基準に正規化
                 item.pulseScale = 1 + Math.sin(item.angle) * 0.1;
                 const size = item.size * item.pulseScale;
                 
